@@ -1,0 +1,54 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # 回到 Linux，因为命令行操作最快
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+
+      # 核心步骤：手动下载并只准备项目需要的 SDK，彻底隔离 35x/36x
+      - name: Setup Isolated Android SDK
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip
+          unzip -q cmdline.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          
+          # 设置环境变量，强制 Gradle 只看我们这个干净的目录
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          
+          # 自动接受协议并只安装项目需要的 API 29 和 Build-tools 29.0.2
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-29" "build-tools;29.0.2" "platform-tools" > /dev/null
+          
+          # 将环境变量写入后续步骤
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "SDK 初始化完成，环境已隔离"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug --no-daemon
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vmq-app-final-apk
+          path: app/build/outputs/apk/debug/*.apk
