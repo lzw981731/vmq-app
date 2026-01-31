@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. 设置 JDK 11（修复：Gradle 6.7.1 不支持 Java 17 的问题）
+      # 2. 设置 JDK 11（确保项目 Gradle 6.7.1 能运行）
       - name: set up JDK 11
         uses: actions/setup-java@v4
         with:
@@ -21,18 +21,21 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3. 设置 Android SDK 环境（修复：Not a number: 34x 的老版本插件兼容性错误）
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          # 强制指定一个老版本能识别的编译工具
-          build-tools: "30.0.3"
+      # 3. 强力清除干扰编译的 SDK 组件（解决 34x 报错的核心逻辑）
+      - name: Clean up problematic SDK components
+        run: |
+          # 删除带有字母后缀的干扰文件夹（这些会导致旧版 AGP 崩溃）
+          rm -rf $ANDROID_SDK_ROOT/platforms/android-34-ext*
+          rm -rf $ANDROID_SDK_ROOT/platforms/android-35*
+          rm -rf $ANDROID_SDK_ROOT/build-tools/34.0.0-rc*
+          rm -rf $ANDROID_SDK_ROOT/build-tools/35*
+          echo "干扰组件清理完成"
 
       # 4. 授予 Gradle 执行权限
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 5. 执行构建（增加 --no-daemon 提高 CI 稳定性）
+      # 5. 执行构建
       - name: Build with Gradle
         run: ./gradlew assembleDebug --no-daemon
 
