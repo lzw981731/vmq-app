@@ -15,7 +15,6 @@
   - **分色显示**：配置数值采用灰色区分，界面更专业。
   - **双通道手动配置**：地址与密钥分开输入，大幅降低填错概率。
   - **沉浸式适配**：支持 HTTP/HTTPS 自动识别，User-Agent 修正防止请求闪退。
-- **点击跳转**：右下角内嵌 [vipkj.net](https://www.vipkj.net) 快捷跳转。
 
 ## 🚀 快速上手
 
@@ -40,14 +39,6 @@
   - `priceStr`：动态格式化金额（自动去除末尾多余的 0）。
 - **User-Agent**：`V-MQ-Monitor/3.0.0 (Android)`
 
-## 📦 自动构建 (GitHub Actions)
-
-本项目已配置完善的 CI/CD 工作流。您可以分叉 (Fork) 本仓库后，在 **Actions** 标签下手动触发构建：
-
-1. 进入 GitHub 项目的 **Actions** 页面。
-2. 选择 **Build Android APK** 工作流。
-3. 点击 **Run workflow**。
-4. 构建完成后，在运行记录的 **Artifacts** 处下载生成的 APK。
 
 ## 📝 开发者说明
 
@@ -57,5 +48,4 @@
 
 ---
 
-**By [vipkj.net](https://www.vipkj.net)** 
 *让支付回调更简单、更稳健。*
