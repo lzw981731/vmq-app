@@ -1,19 +1,18 @@
 name: Build Android APK
 
-# 触发方式：手动运行
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # 核心变动：改用 macOS 环境，避开 Linux 环境下杂乱的 SDK 预览版
+    runs-on: macos-13
 
     steps:
-      # 1. 检出代码
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. 设置 JDK 11（确保项目 Gradle 6.7.1 能运行）
+      # 保持 Java 11，这是 Gradle 6.7.1 的最佳拍档
       - name: set up JDK 11
         uses: actions/setup-java@v4
         with:
@@ -21,25 +20,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3. 强力清除干扰编译的 SDK 组件（解决 34x 报错的核心逻辑）
-      - name: Clean up problematic SDK components
-        run: |
-          # 删除带有字母后缀的干扰文件夹（这些会导致旧版 AGP 崩溃）
-          rm -rf $ANDROID_SDK_ROOT/platforms/android-34-ext*
-          rm -rf $ANDROID_SDK_ROOT/platforms/android-35*
-          rm -rf $ANDROID_SDK_ROOT/build-tools/34.0.0-rc*
-          rm -rf $ANDROID_SDK_ROOT/build-tools/35*
-          echo "干扰组件清理完成"
-
-      # 4. 授予 Gradle 执行权限
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 5. 执行构建
+      # 执行构建（OSX 环境下不需要额外清理 SDK）
       - name: Build with Gradle
         run: ./gradlew assembleDebug --no-daemon
 
-      # 6. 上传生成的 APK 作为附件
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
